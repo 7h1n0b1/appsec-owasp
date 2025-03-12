@@ -13,6 +13,11 @@ const STATS_DATA_FILE = path.join(__dirname, 'stats.json');
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '..')));
 
+// Default route to ensure login page is always the entry point
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
 // Initialize data files if they don't exist
 if (!fs.existsSync(USER_DATA_FILE)) {
   fs.writeFileSync(USER_DATA_FILE, JSON.stringify([], null, 2));
@@ -296,6 +301,37 @@ app.delete('/stats', (req, res) => {
   } catch (error) {
     console.error('Error clearing stats:', error);
     res.status(500).json({ error: 'Failed to clear statistics' });
+  }
+});
+
+// User management - Delete a user
+app.delete('/api/users/:username', (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Load existing users
+    let users = [];
+    if (fs.existsSync(USER_DATA_FILE)) {
+      const fileData = fs.readFileSync(USER_DATA_FILE, 'utf8');
+      users = JSON.parse(fileData);
+    }
+    
+    // Check if user exists
+    const userIndex = users.findIndex(user => user.username === username);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Remove the user
+    users.splice(userIndex, 1);
+    
+    // Save updated users list
+    fs.writeFileSync(USER_DATA_FILE, JSON.stringify(users, null, 2));
+    
+    res.status(200).json({ message: `User ${username} deleted successfully` });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

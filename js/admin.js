@@ -379,44 +379,19 @@ async function resetUserPassword(username, newPassword) {
         });
         
         if (response.ok) {
-            console.log(`Password reset for user: ${username} via server`);
-            return;
+            console.log(`Password reset for user: ${username} successful`);
         } else {
-            console.warn('Server password reset failed, falling back to local reset');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to reset password');
         }
     } catch (error) {
-        console.warn('Failed to reset password via server, falling back to local reset:', error);
-    }
-    
-    // Fallback to local storage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    // Find the user
-    const userIndex = registeredUsers.findIndex(user => user.username === username);
-    
-    if (userIndex !== -1) {
-        // Hash the new password
-        const hashedPassword = hashPassword(newPassword);
-        
-        // Update the user's password
-        registeredUsers[userIndex].password = hashedPassword;
-        
-        // Save the updated users
-        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-        
-        console.log(`Password reset for user: ${username} locally`);
+        console.error('Failed to reset password:', error);
+        alert(`Failed to reset password: ${error.message}`);
     }
 }
 
 async function addNewUser(userData) {
     try {
-        // First check if user already exists in local storage
-        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        if (registeredUsers.some(user => user.username === userData.username)) {
-            document.getElementById('add-user-error').textContent = 'Username already exists';
-            return false;
-        }
-        
         // Try to add user to server
         const response = await fetch('/save-user', {
             method: 'POST',
@@ -435,21 +410,13 @@ async function addNewUser(userData) {
                 document.getElementById('add-user-error').textContent = 'Username already exists';
                 return false;
             }
-            console.warn('Server failed to add user, falling back to local storage');
+            throw new Error(errorData.error || 'Server failed to add user');
         }
     } catch (error) {
-        console.warn('Failed to add user via server, falling back to local storage:', error);
+        console.error('Failed to add user:', error);
+        document.getElementById('add-user-error').textContent = `Failed to add user: ${error.message}`;
+        return false;
     }
-    
-    // Fallback to local storage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    // Add user to local storage
-    registeredUsers.push(userData);
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-    
-    console.log(`User ${userData.username} added successfully to local storage`);
-    return true;
 }
 
 async function deleteUser(username) {
@@ -464,44 +431,31 @@ async function deleteUser(username) {
             method: 'DELETE'
         });
         
+        if (!userResponse.ok) {
+            throw new Error(`Failed to delete user: ${(await userResponse.json()).error || userResponse.statusText}`);
+        }
+        
         // Delete user stats from server
         const statsResponse = await fetch(`/stats/${username}`, {
             method: 'DELETE'
         });
         
-        if (userResponse.ok && statsResponse.ok) {
-            console.log(`User and stats deleted for: ${username} via server`);
-        } else {
-            console.warn('Server deletion failed, falling back to local deletion');
+        if (!statsResponse.ok) {
+            console.warn(`Failed to delete stats for user ${username}, but user was deleted successfully`);
         }
+        
+        console.log(`User and stats deleted for: ${username}`);
+        
+        // Update the UI
+        updateUserTable();
+        updateStatsDashboard();
+        
+        // Show success message
+        alert(`User ${username} has been deleted successfully`);
     } catch (error) {
-        console.warn('Failed to delete user via server, falling back to local deletion:', error);
+        console.error('Error deleting user:', error);
+        alert(`Failed to delete user: ${error.message}`);
     }
-    
-    // Fallback to local storage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    // Filter out the user to delete
-    const updatedUsers = registeredUsers.filter(user => user.username !== username);
-    
-    // Save the updated users
-    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-    
-    // Also delete user stats
-    const allStats = await getAllUserStats();
-    
-    if (allStats[username]) {
-        delete allStats[username];
-        await saveStats(allStats);
-    }
-    
-    // Update the user table
-    updateUserTable();
-    
-    // Update dashboard statistics
-    updateStatsDashboard();
-    
-    console.log(`User deleted: ${username} locally`);
 }
 
 // Admin settings functionality

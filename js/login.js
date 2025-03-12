@@ -22,10 +22,17 @@ function hashPassword(password) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // If already logged in, redirect to index page
+    // If already logged in, redirect to dashboard page
     const isLoggedIn = localStorage.getItem('userLoggedIn');
     if (isLoggedIn) {
-        window.location.href = 'index.html';
+        // Check if user is admin
+        const isAdmin = localStorage.getItem('isAdmin') === 'true';
+        if (isAdmin) {
+            window.location.href = 'admin.html';
+        } else {
+            // For regular users, redirect to the main dashboard
+            window.location.href = 'dashboard.html';
+        }
         return;
     }
     
@@ -115,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.user.isAdmin) {
                         window.location.href = 'admin.html';
                     } else {
-                        window.location.href = 'index.html';
+                        window.location.href = 'dashboard.html';
                     }
                 }, 1500);
             } else {

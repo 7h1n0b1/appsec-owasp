@@ -4,11 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Debug - check if vulnerabilitiesData exists
     console.log("Loading vulnerabilities:", typeof vulnerabilitiesData, Array.isArray(vulnerabilitiesData) ? vulnerabilitiesData.length : 'not an array');
     
-    // For development - add a fake user if not logged in
-    if (!localStorage.getItem('userLoggedIn')) {
-        localStorage.setItem('userLoggedIn', 'true');
-        localStorage.setItem('currentUser', 'testuser');
-    }
+    // Remove development auto-login feature
+    // Now we'll always enforce proper login
     
     // Check if user is logged in
     checkUserAuthentication();
@@ -78,7 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Check if user is authenticated, redirect to login page if not
 function checkUserAuthentication() {
     const isLoggedIn = localStorage.getItem('userLoggedIn');
-    if (!isLoggedIn && window.location.pathname !== '/login.html') {
+    // Get current page name from path
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    // If not logged in and not already on login, register, or forgot-password page, redirect to login
+    if (!isLoggedIn && 
+        currentPage !== 'login.html' && 
+        currentPage !== 'register.html' && 
+        currentPage !== 'forgot-password.html') {
         window.location.href = 'login.html';
     }
 }

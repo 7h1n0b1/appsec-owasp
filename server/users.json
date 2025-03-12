@@ -1,1 +1,22 @@
+<<<<<<< HEAD
 []
+=======
+[
+  {
+    "username": "vineet",
+    "fullname": "Vineet Sharma",
+    "email": "vineet@gmail.com",
+    "password": "hashed_493c9f12",
+    "securityQuestion": "What was your first pet's name?",
+    "securityAnswer": "tree"
+  },
+  {
+    "fullname": "Mayank Sharma",
+    "email": "mayank@gmail.com",
+    "username": "Mayank",
+    "password": "hashed_ed94a19",
+    "securityQuestion": "What city were you born in?",
+    "securityAnswer": "tree"
+  }
+]
+>>>>>>> d9cbecc (Bug Fixes)
