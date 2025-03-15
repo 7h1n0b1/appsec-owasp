@@ -377,23 +377,37 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Very simple code highlighting function to fix the annotation issue
 function highlightCode(code) {
-    // Escape HTML first
-    const escapedCode = escapeHtml(code);
+    // First, escape HTML to prevent XSS
+    let result = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+        
+    // Apply highlighting in specific order to avoid overlap issues
     
-    // Apply basic syntax highlighting with Java and Spring Boot keywords added
-    return escapedCode
-        .replace(/\/\/(.*)/g, '<span class="comment">//$1</span>')
+    // First, handle Java annotations with parameters
+    //result = result.replace(/@(\w+)(\([^)]*\))/g, '<span class="annotation">@$1</span>$2');
+    
+    // Then handle simple annotations without parameters
+    //result = result.replace(/@(\w+)\b/g, '<span class="annotation">@$1</span>');
+    
+    // Now add basic syntax highlighting
+    result = result
+        // Comments
+        //.replace(/\/\/(.*)/g, '<span class="comment">//$1</span>')
         .replace(/\/\*([\s\S]*?)\*\//g, '<span class="comment">/*$1*/</span>')
-        // Add Java and Spring Boot keywords
-        .replace(/\b(const|let|var|function|if|else|return|await|async|try|catch|for|while|class|import|export|from|require|public|private|protected|static|void|String|int|boolean|throws|throw|new|extends|implements|interface|abstract|final|package|this|super|null|instanceof|enum|long|double|System|out|println|ResponseEntity|RequestMapping|RestController|Autowired|GetMapping|PostMapping|PathVariable|RequestParam)\b/g, '<span class="keyword">$1</span>')
-        .replace(/\b(true|false|null|undefined)\b/g, '<span class="keyword">$1</span>')
-        .replace(/"(.*?)"/g, '<span class="string">"$1"</span>')
-        .replace(/'(.*?)'/g, '<span class="string">\'$1\'</span>')
-        .replace(/`([\s\S]*?)`/g, '<span class="string">`$1`</span>')
-        .replace(/\b(\d+)\b/g, '<span class="number">$1</span>')
-        // Add annotation highlighting
-        .replace(/(@\w+)/g, '<span class="annotation">$1</span>');
+        
+        // Strings
+        //.replace(/"([^"]*)"/g, '<span class="string">"$1"</span>')
+        //.replace(/'([^']*)'/g, '<span class="string">\'$1\'</span>')
+        
+        // Keywords
+        .replace(/\b(public|private|protected|class|interface|void|int|boolean|String|if|else|for|while|return|new|null|true|false)\b/g, 
+                 '<span class="keyword">$1</span>');
+    
+    return result;
 }
 
 function isCorrectSolution(userSolution, correctSolution) {

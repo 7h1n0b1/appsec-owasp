@@ -297,7 +297,19 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify(userObj)
         })
-        .catch(error => console.error('Error saving user to file:', error));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User registration successful:', data);
+        })
+        .catch(error => {
+            console.error('Error saving user to file:', error);
+            showMessage('An error occurred while registering user with server. User is saved locally but server storage failed.', 'warning');
+        });
         
         // Redirect to login page after successful registration
         setTimeout(() => {
